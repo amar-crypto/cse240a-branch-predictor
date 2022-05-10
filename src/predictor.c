@@ -36,9 +36,9 @@ int verbose;
 
 
 //tournament
-int tournament_local_predictor_pattern_length = 12;
-int tournament_gshare_history_pattern_length  = 12;
-int pc_bits_used_tournament = 12;
+int tournament_local_predictor_pattern_length = 11;
+int tournament_gshare_history_pattern_length  = 11;
+int pc_bits_used_tournament = 11;
 //------------------------------------//
 //      Predictor Data Structures     //
 //------------------------------------//
