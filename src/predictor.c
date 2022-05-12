@@ -193,7 +193,8 @@ uint32_t local_predictor_BHT_index = tournament_local_predictor[pc_lower_bits] &
 
 uint32_t bht_entries_gshare = 1 << tournament_gshare_history_pattern_length;
 uint32_t ghistory_lower_bits = tournament_ghistory & (bht_entries_gshare -1);
-uint32_t index_gshare_BHT = pc_lower_bits ^ ghistory_lower_bits;
+//uint32_t index_gshare_BHT = pc_lower_bits ^ ghistory_lower_bits;
+uint32_t index_gshare_BHT = ghistory_lower_bits;
 
 
 if (tournament_metapredictor[pc_lower_bits] == chooser_local_probably || tournament_metapredictor[pc_lower_bits] == chooser_local_yes) {
@@ -348,7 +349,8 @@ outcome_local_predictor = TAKEN;
 
   uint32_t bht_entries_gshare = 1 << tournament_gshare_history_pattern_length;
   uint32_t ghistory_lower_bits = tournament_ghistory & (bht_entries_gshare -1);
-  uint32_t index_gshare_BHT = pc_lower_bits ^ ghistory_lower_bits;
+ // uint32_t index_gshare_BHT = pc_lower_bits ^ ghistory_lower_bits;
+ uint32_t index_gshare_BHT = ghistory_lower_bits;
 
 
   uint8_t outcome_gshare = tournament_gshare[index_gshare_BHT];
