@@ -20,10 +20,20 @@ const char *email       = "aramnani@ucsd.edu";
 //      Predictor Configuration       //
 //------------------------------------//
 
+//Metapredictor States
 #define chooser_local_yes 0
 #define chooser_local_probably 1
 #define chooser_gshare_probably 2
 #define chooser_gshare_yes 3
+
+//Perceptron
+#define number_of_weights 20
+#define number_of_bits_for_weight 8
+#define weight_max_value (pow(2, number_of_bits_for_weight - 1) - 1)
+#define weight_min_value ((weight_max_value + 1) * (-1))
+#define perceptron_table_size (32 * 1024)
+#define number_of_perceptrons ((int)(perceptron_table_size / ((number_of_weights + 1) * number_of_bits_for_weight)))
+#define threshold (1.93 * number_of_weights + 14)
 
 // Handy Global for use in output routines
 const char *bpName[4] = { "Static", "Gshare",
@@ -42,6 +52,12 @@ int pc_bits_used_tournament = 11;
 //------------------------------------//
 //      Predictor Data Structures     //
 //------------------------------------//
+//Perceptron
+//int global_history_bits_perceptron = 28;
+//int pc_bits_for_perceptron = 10;
+//int number_of_bits_for_weight = 8;
+
+
 
 //TODO: Add your own Branch Predictor data structures here
 //
@@ -58,7 +74,15 @@ uint8_t *tournament_local_predictor_BHT;
 uint64_t tournament_ghistory;
 
 
-//tournament
+//perceptron
+
+int perceptron_table[number_of_perceptrons][number_of_weights + 1];
+//int pc_lower_bits;
+int perceptron_ghistory;
+int threshold_check;
+int y;
+//int perceptron_ghistory;
+uint8_t prediction;
 
 //------------------------------------//
 //        Predictor Functions         //
@@ -116,7 +140,26 @@ tournament_ghistory = 0;
 
 }
 
+//perceptron
 
+void init_perceptron() {
+
+
+int i , j;
+
+threshold_check = 0;
+
+for (i = 0; i < number_of_perceptrons; i++) {
+
+   for (j = 0; j <= number_of_weights + 1; j++) {
+        perceptron_table[i][j] = 0;
+}  
+
+}
+
+perceptron_ghistory = 0;
+
+}
 
 uint8_t 
 gshare_predict(uint32_t pc) {
@@ -191,6 +234,47 @@ else {
 
 }
 
+
+uint8_t 
+perceptron_predict(uint32_t pc) {
+
+prediction = 0;
+
+uint32_t pc_lower_bits = pc % number_of_perceptrons;
+
+y = perceptron_table[pc_lower_bits][0];
+
+int key = 1;
+
+uint8_t i;
+
+for (i = 1; i < number_of_weights + 1; i++) {
+
+if ((perceptron_ghistory&key) == 0) {
+y -= perceptron_table[pc_lower_bits][i];
+} 
+
+else {
+y += perceptron_table[pc_lower_bits][i];
+}
+
+key = key << 1;
+
+}
+
+threshold_check = y;
+
+if (y >= 0) {
+prediction = 1;
+return TAKEN;
+}
+else {
+prediction = 0;
+return NOTTAKEN;
+}
+
+
+}
 
 void
 train_gshare(uint32_t pc, uint8_t outcome) {
@@ -326,6 +410,58 @@ printf("Warning: Undefined state of entry in METAPREDICTOR!\n");
 
 }
 
+
+void
+train_perceptron(uint32_t pc, uint8_t outcome) {
+
+
+uint32_t pc_lower_bits = pc % number_of_perceptrons;
+
+uint8_t i;
+
+int weight_change;
+
+int key = 1;
+
+
+if (prediction != outcome || (threshold_check < threshold && threshold_check > ((-1) * threshold))) {
+
+if ((perceptron_table[pc_lower_bits][0] < weight_max_value) && (perceptron_table[pc_lower_bits][0] > weight_min_value)) {
+
+if (outcome == TAKEN) {
+perceptron_table[pc_lower_bits][0] = perceptron_table[pc_lower_bits][0] + 1;
+}
+
+
+else {
+perceptron_table[pc_lower_bits][0] =  perceptron_table[pc_lower_bits][0] - 1;;
+}
+
+}
+
+for (i = 1; i < number_of_weights + 1; i++) {
+
+if (((outcome == TAKEN) && ((perceptron_ghistory & key) != 0)) || ((outcome == NOTTAKEN) && ((perceptron_ghistory & key) == 0))) {
+  weight_change = 1;
+}
+else {
+  weight_change = -1;
+}
+
+if ((perceptron_table[pc_lower_bits][i] < weight_max_value) && (perceptron_table[pc_lower_bits][i] > weight_min_value)) {
+perceptron_table[pc_lower_bits][i] = perceptron_table[pc_lower_bits][i] + weight_change;
+}
+
+key = key << 1;
+}
+
+}
+
+perceptron_ghistory = ((perceptron_ghistory << 1) | outcome) ; 
+
+}
+
+
 void
 cleanup_gshare() {
   free(bht_gshare);
@@ -345,6 +481,8 @@ init_predictor()
       init_tournament();
     break;
     case CUSTOM:
+      init_perceptron();
+     break;
     default:
       break;
   }
@@ -368,6 +506,7 @@ make_prediction(uint32_t pc)
     case TOURNAMENT:
       return tournament_predict(pc);
     case CUSTOM:
+    return perceptron_predict(pc);
     default:
       break;
   }
@@ -392,6 +531,7 @@ train_predictor(uint32_t pc, uint8_t outcome)
     case TOURNAMENT:
       return train_tournament(pc, outcome);
     case CUSTOM:
+      return train_perceptron(pc,outcome);
     default:
       break;
   }
