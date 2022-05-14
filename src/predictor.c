@@ -51,7 +51,7 @@ int verbose;
 
 //tournament
 int tournament_local_predictor_pattern_length = 11;
-int tournament_gshare_history_pattern_length  = 11;
+int tournament_gshare_history_pattern_length  = 10;
 int pc_bits_used_tournament = 11;
 //------------------------------------//
 //      Predictor Data Structures     //
@@ -133,7 +133,7 @@ for(i = 0; i< bht_entries_gshare; i++){
   tournament_gshare[i] = WN;
 }
 
-uint32_t meta_predictor_entries = 1 << pc_bits_used_tournament;  
+uint32_t meta_predictor_entries = 1 << (pc_bits_used_tournament);  
 tournament_metapredictor = (uint8_t*)malloc(meta_predictor_entries * sizeof(uint8_t));
 
 for(i = 0; i< meta_predictor_entries; i++){
@@ -190,7 +190,7 @@ gshare_predict(uint32_t pc) {
 uint8_t 
 tournament_predict(uint32_t pc) {
 
-uint32_t meta_predictor_entries = 1 << pc_bits_used_tournament;
+uint32_t meta_predictor_entries = 1 << (pc_bits_used_tournament);
 uint32_t pc_lower_bits = pc & (meta_predictor_entries - 1);
 
 uint32_t local_predictor_BHT_index = tournament_local_predictor[pc_lower_bits] & (meta_predictor_entries - 1); 
