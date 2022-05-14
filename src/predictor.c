@@ -6,12 +6,16 @@
 //  described in the README                               //
 //========================================================//
 #include <stdio.h>
+
 #include <math.h>
 #include "predictor.h"
 
 //
 // TODO:Student Information
 //
+
+
+
 const char *studentName = "Amardeep Ramnani";
 const char *studentID   = "A59005452";
 const char *email       = "aramnani@ucsd.edu";
@@ -27,7 +31,7 @@ const char *email       = "aramnani@ucsd.edu";
 #define chooser_gshare_yes 3
 
 //Perceptron
-#define number_of_weights 20
+#define number_of_weights 25
 #define number_of_bits_for_weight 8
 #define weight_max_value (pow(2, number_of_bits_for_weight - 1) - 1)
 #define weight_min_value ((weight_max_value + 1) * (-1))
